@@ -1,0 +1,3 @@
+# Git revision configuration for Docker development.
+# This file is read by lms/envs/production.py via REVISION_CFG.
+EDX_PLATFORM_REVISION: "docker-dev"

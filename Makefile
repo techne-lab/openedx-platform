@@ -1,18 +1,43 @@
 # Do things in edx-platform
 .PHONY: base-requirements check-types clean \
-  compile-requirements detect_changed_source_translations dev-requirements \
+  compile-requirements create detect_changed_source_translations dev-requirements \
   docs extract_translations \
   guides help lint-imports local-requirements migrate migrate-lms migrate-cms \
   pre-requirements pull pull_xblock_translations pull_translations push_translations \
   requirements shell swagger \
-  technical-docs test-requirements ubuntu-requirements upgrade-package upgrade
+  technical-docs test-requirements ubuntu-requirements up upgrade-package upgrade
 
 # Careful with mktemp syntax: it has to work on Mac and Ubuntu, which have differences.
 PRIVATE_FILES := $(shell mktemp -u /tmp/private_files.XXXXXX)
 
+COMPOSE_CMD ?= docker compose
+
 help: ## display this help message
 	@echo "Please use \`make <target>' where <target> is one of"
 	@grep '^[a-zA-Z]' $(MAKEFILE_LIST) | sort | awk -F ':.*?## ' 'NF==2 {printf "\033[36m  %-25s\033[0m %s\n", $$1, $$2}'
+
+# ---------------------------------------------------------------------------
+# Docker / Docker Compose targets
+# ---------------------------------------------------------------------------
+
+create: ## build Docker images, start infrastructure and run database provisioning
+	@echo "==> Building Docker image…"
+	$(COMPOSE_CMD) build
+	@echo "==> Starting infrastructure services (mysql, mongo, memcached)…"
+	$(COMPOSE_CMD) up -d mysql mongo memcached
+	@echo "==> Waiting for databases to be ready…"
+	$(COMPOSE_CMD) run --rm \
+	  -e DJANGO_SETTINGS_MODULE=lms.envs.devstack \
+	  lms \
+	  sh -c "until python -c \"import socket; socket.create_connection(('mysql',3306),5)\" 2>/dev/null; do sleep 2; done && \
+	         until python -c \"import socket; socket.create_connection(('mongo',27017),5)\" 2>/dev/null; do sleep 2; done"
+	@echo "==> Running database provisioning…"
+	COMPOSE_CMD="$(COMPOSE_CMD)" bash docker/provision.sh
+	@echo ""
+	@echo "✅  Setup complete. Run 'make up' to start all services."
+
+up: ## start all Docker Compose services
+	$(COMPOSE_CMD) up
 
 clean: ## archive and delete most git-ignored files
 	@# Remove all the git-ignored stuff, but save and restore things marked
