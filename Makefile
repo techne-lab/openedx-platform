@@ -21,20 +21,20 @@ help: ## display this help message
 # ---------------------------------------------------------------------------
 
 create: ## build Docker images, start infrastructure and run database provisioning
-	@echo "==> Building Docker image…"
+	@echo "==> Building Docker image..."
 	$(COMPOSE_CMD) build
-	@echo "==> Starting infrastructure services (mysql, mongo, memcached)…"
+	@echo "==> Starting infrastructure services (mysql, mongo, memcached)..."
 	$(COMPOSE_CMD) up -d mysql mongo memcached
-	@echo "==> Waiting for databases to be ready…"
+	@echo "==> Waiting for databases to be ready..."
 	$(COMPOSE_CMD) run --rm \
 	  -e DJANGO_SETTINGS_MODULE=lms.envs.devstack \
 	  lms \
 	  sh -c "until python -c \"import socket; socket.create_connection(('mysql',3306),5)\" 2>/dev/null; do sleep 2; done && \
 	         until python -c \"import socket; socket.create_connection(('mongo',27017),5)\" 2>/dev/null; do sleep 2; done"
-	@echo "==> Running database provisioning…"
+	@echo "==> Running database provisioning..."
 	COMPOSE_CMD="$(COMPOSE_CMD)" bash docker/provision.sh
 	@echo ""
-	@echo "✅  Setup complete. Run 'make up' to start all services."
+	@echo "Setup complete. Run 'make up' to start all services."
 
 up: ## start all Docker Compose services
 	$(COMPOSE_CMD) up

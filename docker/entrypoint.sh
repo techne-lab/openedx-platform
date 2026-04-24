@@ -17,7 +17,7 @@ wait_for_service() {
     local host="$1"
     local port="$2"
     local label="${3:-$host:$port}"
-    echo "Waiting for $label …"
+    echo "Waiting for $label ..."
     until python -c "import socket; s=socket.create_connection(('$host',$port),2)" 2>/dev/null; do
         sleep 2
     done

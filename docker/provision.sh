@@ -7,28 +7,28 @@
 
 set -euo pipefail
 
-COMPOSE_CMD="${COMPOSE_CMD:-docker compose}"
+read -ra COMPOSE_CMD <<< "${COMPOSE_CMD:-docker compose}"
 
-echo "==> Running LMS migrations…"
-$COMPOSE_CMD run --rm \
+echo "==> Running LMS migrations..."
+"${COMPOSE_CMD[@]}" run --rm \
     -e DJANGO_SETTINGS_MODULE=lms.envs.devstack \
     lms \
     python manage.py lms migrate --database default --traceback --pythonpath=.
 
-echo "==> Running LMS CSMH migrations…"
-$COMPOSE_CMD run --rm \
+echo "==> Running LMS CSMH migrations..."
+"${COMPOSE_CMD[@]}" run --rm \
     -e DJANGO_SETTINGS_MODULE=lms.envs.devstack \
     lms \
     python manage.py lms migrate --database student_module_history --traceback --pythonpath=.
 
-echo "==> Running CMS migrations…"
-$COMPOSE_CMD run --rm \
+echo "==> Running CMS migrations..."
+"${COMPOSE_CMD[@]}" run --rm \
     -e DJANGO_SETTINGS_MODULE=cms.envs.devstack \
     cms \
     python manage.py cms migrate --database default --noinput --traceback --pythonpath=.
 
-echo "==> Creating default superuser (user: edx / password: edx)…"
-$COMPOSE_CMD run --rm \
+echo "==> Creating default superuser (user: edx / password: edx)..."
+"${COMPOSE_CMD[@]}" run --rm \
     -e DJANGO_SETTINGS_MODULE=lms.envs.devstack \
     lms \
     python manage.py lms shell -c "
