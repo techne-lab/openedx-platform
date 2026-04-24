@@ -54,7 +54,7 @@ case "${1:-lms}" in
     lms_worker)
         wait_for_service "${MYSQL_HOST:-mysql}" "${MYSQL_PORT:-3306}" MySQL
         wait_for_service "${MONGO_HOST:-mongo}" "${MONGO_PORT:-27017}" MongoDB
-        cd "${PLATFORM_ROOT}"
+        cd "${PLATFORM_ROOT}" || { echo "ERROR: could not cd to ${PLATFORM_ROOT}"; exit 1; }
         exec celery -A lms.celery worker \
             --loglevel="${LOG_LEVEL:-INFO}" \
             --queues="${LMS_WORKER_QUEUES:-lms.default,lms.high,lms.low}"
@@ -62,7 +62,7 @@ case "${1:-lms}" in
     cms_worker)
         wait_for_service "${MYSQL_HOST:-mysql}" "${MYSQL_PORT:-3306}" MySQL
         wait_for_service "${MONGO_HOST:-mongo}" "${MONGO_PORT:-27017}" MongoDB
-        cd "${PLATFORM_ROOT}"
+        cd "${PLATFORM_ROOT}" || { echo "ERROR: could not cd to ${PLATFORM_ROOT}"; exit 1; }
         exec celery -A cms.celery worker \
             --loglevel="${LOG_LEVEL:-INFO}" \
             --queues="${CMS_WORKER_QUEUES:-cms.default,cms.high,cms.low}"
