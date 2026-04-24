@@ -35,7 +35,7 @@ case "${1:-lms}" in
             --workers "${LMS_WORKERS:-4}" \
             --timeout 300 \
             --max-requests 1000 \
-            --config "${PLATFORM_ROOT}/lms/docker_lms_gunicorn.py" \
+            --pythonpath "${PLATFORM_ROOT}" \
             "lms.wsgi:application"
         ;;
     cms)
@@ -48,20 +48,22 @@ case "${1:-lms}" in
             --workers "${CMS_WORKERS:-2}" \
             --timeout 300 \
             --max-requests 1000 \
-            --config "${PLATFORM_ROOT}/cms/docker_cms_gunicorn.py" \
+            --pythonpath "${PLATFORM_ROOT}" \
             "cms.wsgi:application"
         ;;
     lms_worker)
         wait_for_service "${MYSQL_HOST:-mysql}" "${MYSQL_PORT:-3306}" MySQL
         wait_for_service "${MONGO_HOST:-mongo}" "${MONGO_PORT:-27017}" MongoDB
-        exec python manage.py lms celery worker \
+        cd "${PLATFORM_ROOT}"
+        exec celery -A lms.celery worker \
             --loglevel="${LOG_LEVEL:-INFO}" \
             --queues="${LMS_WORKER_QUEUES:-lms.default,lms.high,lms.low}"
         ;;
     cms_worker)
         wait_for_service "${MYSQL_HOST:-mysql}" "${MYSQL_PORT:-3306}" MySQL
         wait_for_service "${MONGO_HOST:-mongo}" "${MONGO_PORT:-27017}" MongoDB
-        exec python manage.py cms celery worker \
+        cd "${PLATFORM_ROOT}"
+        exec celery -A cms.celery worker \
             --loglevel="${LOG_LEVEL:-INFO}" \
             --queues="${CMS_WORKER_QUEUES:-cms.default,cms.high,cms.low}"
         ;;

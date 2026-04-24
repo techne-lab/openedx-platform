@@ -121,8 +121,6 @@ services:
         condition: service_healthy
       memcached:
         condition: service_started
-      lms:
-        condition: service_started
     environment:
       SERVICE_VARIANT: cms
       DJANGO_SETTINGS_MODULE: cms.envs.devstack

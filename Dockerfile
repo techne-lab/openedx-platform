@@ -59,6 +59,8 @@ COPY pyproject.toml ./
 RUN pip install --upgrade pip setuptools wheel \
     && pip install -r requirements/pip-tools.txt \
     && pip install -r requirements/edx/base.txt \
+    # assets.txt provides libsass + click needed by scripts/compile_sass.py
+    && pip install -r requirements/edx/assets.txt \
     && pip install -e .
 
 # ---------------------------------------------------------------------------
@@ -73,12 +75,11 @@ RUN npm ci --prefer-offline
 # Copy the rest of the source code
 COPY . .
 
-# Compile static assets (Sass → CSS, webpack bundles, etc.)
-RUN node_modules/.bin/webpack --config webpack.prod.config.js \
-    && python manage.py lms compile_sass \
-    && python manage.py cms compile_sass \
-    && python manage.py lms collectstatic --noinput \
-    && python manage.py cms collectstatic --noinput
+# Build JS bundles (webpack) and compile Sass → CSS.
+# Uses npm scripts; no Django settings or database connection required here.
+# devstack settings use DevelopmentStorage which serves static files directly
+# from source, so collectstatic is not needed at build time.
+RUN npm run build
 
 # ---------------------------------------------------------------------------
 # Stage 4: final – minimal runtime image
